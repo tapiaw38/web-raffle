@@ -31,10 +31,32 @@ const configEdit = ref(
   Object.fromEntries(Object.keys(CONFIG_FIELDS).map(k => [k, props.config[k] || ''])),
 )
 
+function parsePremios(cfg) {
+  try { return JSON.parse(cfg.premios || '[]') } catch { return [] }
+}
+
+const premiosEdit = ref(parsePremios(props.config))
+
 function sincronizarConfig() {
   Object.keys(CONFIG_FIELDS).forEach(k => {
     configEdit.value[k] = props.config[k] || ''
   })
+  premiosEdit.value = parsePremios(props.config)
+}
+
+function agregarPremio() {
+  premiosEdit.value.push({ nombre: '', cantidad: 1, url: '' })
+}
+
+function eliminarPremio(i) {
+  premiosEdit.value.splice(i, 1)
+}
+
+function guardarPremios() {
+  accion(
+    () => emit('updateConfig', { key: 'premios', value: JSON.stringify(premiosEdit.value), token: token.value }),
+    'cfg-premios',
+  )
 }
 
 function login() {
@@ -190,6 +212,45 @@ function onOverlayClick(e) {
             </div>
           </div>
         </section>
+
+        <!-- Premios -->
+        <section>
+          <h3 class="section-title">
+            Premios
+            <span class="count">{{ premiosEdit.length }}</span>
+          </h3>
+          <div class="premios-list">
+            <div v-for="(premio, i) in premiosEdit" :key="i" class="premio-item">
+              <div class="premio-fields">
+                <div class="config-field">
+                  <label>Nombre</label>
+                  <input v-model="premio.nombre" type="text" placeholder="Ej: TV 55&quot;" />
+                </div>
+                <div class="config-field">
+                  <label>Cantidad</label>
+                  <input v-model.number="premio.cantidad" type="number" min="1" placeholder="1" />
+                </div>
+                <div class="config-field">
+                  <label>URL de imagen</label>
+                  <input v-model="premio.url" type="text" placeholder="https://..." />
+                </div>
+              </div>
+              <button class="btn btn-danger btn-sm btn-icon" @click="eliminarPremio(i)" title="Eliminar">✕</button>
+            </div>
+            <div v-if="premiosEdit.length === 0" class="empty-section">No hay premios cargados</div>
+          </div>
+          <div class="premios-footer">
+            <button class="btn btn-ghost btn-sm" @click="agregarPremio">+ Agregar premio</button>
+            <button
+              class="btn btn-primary btn-sm"
+              @click="guardarPremios"
+              :disabled="cargandoAccion === 'cfg-premios'"
+            >
+              <span v-if="cargandoAccion === 'cfg-premios'" class="spinner" style="width:12px;height:12px" />
+              <span v-else>Guardar premios</span>
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -309,4 +370,31 @@ function onOverlayClick(e) {
 .err { font-size: 13px; color: #f87171; background: rgba(239,68,68,0.1); padding: 10px 14px; border-radius: 6px; }
 
 @media (max-width: 480px) { .panel { max-width: 100%; } }
+
+.premios-list { display: flex; flex-direction: column; gap: 10px; }
+.premio-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.premio-fields { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+.premio-fields input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.premio-fields input:focus { border-color: var(--primary-light); }
+.btn-icon { padding: 6px 8px; flex-shrink: 0; margin-top: 2px; }
+.premios-footer { display: flex; justify-content: space-between; margin-top: 10px; gap: 8px; }
 </style>

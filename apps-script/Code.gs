@@ -5,6 +5,30 @@ const SPREADSHEET_ID = 'TU_SPREADSHEET_ID_AQUI';
 const ADMIN_TOKEN    = 'TU_CONTRASEÑA_ADMIN_AQUI'; // Misma que ponés en el panel
 const EXPIRE_MS      = 15 * 60 * 1000;             // 15 minutos
 // ================================================================
+//
+// ESTRUCTURA ESPERADA DE LA PLANILLA
+// ───────────────────────────────────
+// Hoja "numeros"  →  columnas: numero | estado | comprador | reservado_en
+//   1  | disponible |            |
+//   2  | disponible |            |
+//   …
+//
+// Hoja "config"   →  columnas: key | value
+//   titulo_rifa        | Mi Rifa 2024
+//   descripcion_rifa   | Descripción de la rifa
+//   fecha_rifa         | 31/12/2024
+//   precio_numero      | 1000
+//   alias_transferencia| alias.banco
+//   banco              | Banco Ejemplo
+//   cbu                | 0000000000000000000000
+//   organizador        | Juan Pérez
+//   estado_rifa        | activa
+//   ganador            |
+//   premios            | [{"nombre":"TV 55\"","cantidad":1,"url":"https://ejemplo.com/tv.jpg"},{"nombre":"Notebook","cantidad":1,"url":"https://ejemplo.com/notebook.jpg"}]
+//
+// Ejecutá la función setup() UNA SOLA VEZ desde el editor de Apps Script
+// para crear las hojas con datos de ejemplo.
+// ================================================================
 
 function doGet(e) {
   try {
@@ -153,7 +177,9 @@ function actualizarConfig(key, value) {
       return jsonOk({ success: true });
     }
   }
-  return jsonError('Clave de configuración no encontrada: ' + key);
+  // Clave no encontrada → agregar fila nueva
+  sheet.appendRow([key, value]);
+  return jsonOk({ success: true });
 }
 
 // ----------------------------------------------------------------
@@ -168,4 +194,50 @@ function jsonError(msg) {
   return ContentService
     .createTextOutput(JSON.stringify({ error: msg }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ================================================================
+// SETUP - Ejecutá esta función UNA SOLA VEZ para inicializar la planilla
+// ================================================================
+function setup() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // ── Hoja "numeros" ──────────────────────────────────────────────
+  let numSheet = ss.getSheetByName('numeros');
+  if (!numSheet) numSheet = ss.insertSheet('numeros');
+  numSheet.clearContents();
+  numSheet.appendRow(['numero', 'estado', 'comprador', 'reservado_en']);
+  for (let i = 1; i <= 100; i++) {
+    numSheet.appendRow([i, 'disponible', '', '']);
+  }
+
+  // ── Hoja "config" ───────────────────────────────────────────────
+  let cfgSheet = ss.getSheetByName('config');
+  if (!cfgSheet) cfgSheet = ss.insertSheet('config');
+  cfgSheet.clearContents();
+  cfgSheet.appendRow(['key', 'value']);
+
+  const premiosEjemplo = JSON.stringify([
+    { nombre: 'TV 55"',    cantidad: 1, url: 'https://ejemplo.com/tv.jpg' },
+    { nombre: 'Notebook',  cantidad: 1, url: 'https://ejemplo.com/notebook.jpg' },
+    { nombre: 'Auriculares', cantidad: 2, url: 'https://ejemplo.com/auriculares.jpg' },
+  ]);
+
+  const configDefaults = [
+    ['titulo_rifa',         'Mi Rifa 2024'],
+    ['descripcion_rifa',    'Descripción de la rifa'],
+    ['fecha_rifa',          '31/12/2024'],
+    ['precio_numero',       '1000'],
+    ['alias_transferencia', 'alias.banco'],
+    ['banco',               'Banco Ejemplo'],
+    ['cbu',                 '0000000000000000000000'],
+    ['organizador',         'Juan Pérez'],
+    ['estado_rifa',         'activa'],
+    ['ganador',             ''],
+    ['premios',             premiosEjemplo],
+  ];
+
+  configDefaults.forEach(row => cfgSheet.appendRow(row));
+
+  Logger.log('✅ Setup completado: hojas "numeros" (100 números) y "config" creadas con datos de ejemplo.');
 }
