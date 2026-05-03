@@ -28,6 +28,13 @@ function onImgError(e) {
   e.target.nextElementSibling?.style.removeProperty('display')
 }
 
+const SUFIJOS = ['er', 'do', 'er', 'to', 'to', 'to', 'mo', 'vo', 'no', 'mo']
+function etiquetaPremio(i, total) {
+  if (total === 1) return 'Premio'
+  const n = i + 1
+  return `${n}${SUFIJOS[(n - 1) % 10] ?? 'mo'} Premio`
+}
+
 const tiempoDesde = computed(() => {
   if (!props.ultimaActualizacion) return ''
   const diff = Math.floor((Date.now() - props.ultimaActualizacion) / 1000)
@@ -72,21 +79,30 @@ const tiempoDesde = computed(() => {
       </div>
 
       <!-- Premios -->
-      <div v-if="premios.length" class="premios">
-        <div v-for="(premio, i) in premios" :key="i" class="premio-card">
-          <div class="premio-img-wrap">
-            <img
-              v-if="premio.url"
-              :src="resolverImagen(premio.url)"
-              :alt="premio.nombre"
-              class="premio-img"
-              @error="onImgError"
-            />
-            <span class="premio-img-placeholder" :style="premio.url ? 'display:none' : ''">🎁</span>
-          </div>
-          <div class="premio-info">
-            <span class="premio-nombre">{{ premio.nombre }}</span>
-            <span v-if="premio.cantidad > 1" class="premio-cantidad">x{{ premio.cantidad }}</span>
+      <div v-if="premios.length" class="premios-section">
+        <div class="premios-titulo">🎁 Premios</div>
+        <div class="premios" :class="{ 'premios-unico': premios.length === 1 }">
+          <div
+            v-for="(premio, i) in premios"
+            :key="i"
+            class="premio-card"
+            :class="{ 'premio-principal': i === 0 }"
+          >
+            <div class="premio-etiqueta">{{ etiquetaPremio(i, premios.length) }}</div>
+            <div class="premio-img-wrap">
+              <img
+                v-if="premio.url"
+                :src="resolverImagen(premio.url)"
+                :alt="premio.nombre"
+                class="premio-img"
+                @error="onImgError"
+              />
+              <span class="premio-img-placeholder" :style="premio.url ? 'display:none' : ''">🎁</span>
+            </div>
+            <div class="premio-info">
+              <span class="premio-nombre">{{ premio.nombre }}</span>
+              <span v-if="premio.cantidad > 1" class="premio-cantidad">x{{ premio.cantidad }} unidades</span>
+            </div>
           </div>
         </div>
       </div>
@@ -154,33 +170,92 @@ const tiempoDesde = computed(() => {
 .meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
 .refresh-info { margin-left: auto; }
 
+.premios-section {
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(202,138,4,0.06));
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.premios-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary-light);
+  margin-bottom: 14px;
+}
+
 .premios {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
+  justify-content: center;
+}
+
+.premios-unico {
+  justify-content: flex-start;
 }
 
 .premio-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 14px 8px 8px;
-  min-width: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+  min-width: 110px;
+  max-width: 160px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.premio-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.premio-principal {
+  border-color: rgba(202,138,4,0.45);
+  background: rgba(202,138,4,0.08);
+  box-shadow: 0 0 20px rgba(202,138,4,0.15);
+}
+
+.premio-etiqueta {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(202,138,4,0.2);
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.premio-card:not(.premio-principal) .premio-etiqueta {
+  background: rgba(124,58,237,0.2);
+  color: var(--primary-light);
 }
 
 .premio-img-wrap {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
   background: rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.premios-unico .premio-img-wrap {
+  width: 110px;
+  height: 110px;
 }
 
 .premio-img {
@@ -189,28 +264,29 @@ const tiempoDesde = computed(() => {
   object-fit: cover;
 }
 
-.premio-img-placeholder { font-size: 24px; }
+.premio-img-placeholder { font-size: 36px; }
 
 .premio-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
 }
 
 .premio-nombre {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .premio-cantidad {
   font-size: 11px;
-  color: var(--primary-light);
-  font-weight: 600;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .winner-banner {
