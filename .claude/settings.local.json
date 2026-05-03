@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "WebFetch(domain:tapiaw38.github.io)",
+      "Bash(curl:*)",
+      "Bash(grep -o \".{0,100}premios.{0,100}\")"
     ]
   }
 }
