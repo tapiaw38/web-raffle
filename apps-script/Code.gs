@@ -87,7 +87,7 @@ function getAllData() {
   const cfgSheet = ss.getSheetByName('config');
   const cfgRows  = cfgSheet.getDataRange().getValues().slice(1);
   const config   = {};
-  cfgRows.forEach(r => { if (r[0]) config[r[0]] = r[1]; });
+  cfgRows.forEach(r => { if (r[0]) config[String(r[0]).trim()] = r[1]; });
 
   return { numeros, config };
 }
