@@ -7,6 +7,10 @@ const props = defineProps({
   ultimaActualizacion: { type: Date, default: null },
 })
 
+const premios = computed(() => {
+  try { return JSON.parse(props.config.premios || '[]') } catch { return [] }
+})
+
 const tiempoDesde = computed(() => {
   if (!props.ultimaActualizacion) return ''
   const diff = Math.floor((Date.now() - props.ultimaActualizacion) / 1000)
@@ -47,6 +51,20 @@ const tiempoDesde = computed(() => {
           <span v-if="cargando" class="spinner" style="width:14px;height:14px;border-width:2px" />
           <span v-else>🔄</span>
           <span>{{ cargando ? 'Actualizando...' : `Actualizado ${tiempoDesde}` }}</span>
+        </div>
+      </div>
+
+      <!-- Premios -->
+      <div v-if="premios.length" class="premios">
+        <div v-for="(premio, i) in premios" :key="i" class="premio-card">
+          <div class="premio-img-wrap">
+            <img v-if="premio.url" :src="premio.url" :alt="premio.nombre" class="premio-img" />
+            <span v-else class="premio-img-placeholder">🎁</span>
+          </div>
+          <div class="premio-info">
+            <span class="premio-nombre">{{ premio.nombre }}</span>
+            <span v-if="premio.cantidad > 1" class="premio-cantidad">x{{ premio.cantidad }}</span>
+          </div>
         </div>
       </div>
 
@@ -112,6 +130,65 @@ const tiempoDesde = computed(() => {
 .meta { display: flex; flex-wrap: wrap; gap: 16px; }
 .meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
 .refresh-info { margin-left: auto; }
+
+.premios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.premio-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px 8px 8px;
+  min-width: 0;
+}
+
+.premio-img-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.premio-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.premio-img-placeholder { font-size: 24px; }
+
+.premio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.premio-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.premio-cantidad {
+  font-size: 11px;
+  color: var(--primary-light);
+  font-weight: 600;
+}
 
 .winner-banner {
   display: flex;
