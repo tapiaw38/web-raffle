@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+
+# Variables de entorno (contienen URLs/tokens privados)
+.env
+.env.*.local
+
+# Ejemplos locales (no se suben al repo)
+sheets-example/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+*.local
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
