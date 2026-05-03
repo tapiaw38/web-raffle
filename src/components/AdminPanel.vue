@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+function resolverImagen(url) {
+  if (!url) return ''
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
+  if (m1) return `https://lh3.googleusercontent.com/d/${m1[1]}`
+  const m2 = url.match(/[?&]id=([^&]+)/)
+  if (m2 && url.includes('drive.google.com')) return `https://lh3.googleusercontent.com/d/${m2[1]}`
+  return url
+}
+
 const props = defineProps({
   numeros: { type: Array, default: () => [] },
   config: { type: Object, default: () => ({}) },
@@ -232,7 +241,18 @@ function onOverlayClick(e) {
                 </div>
                 <div class="config-field">
                   <label>URL de imagen</label>
-                  <input v-model="premio.url" type="text" placeholder="https://..." />
+                  <div class="url-preview-row">
+                    <input v-model="premio.url" type="text" placeholder="https://... o link de Google Drive" />
+                    <div class="img-preview">
+                      <img
+                        v-if="premio.url"
+                        :src="resolverImagen(premio.url)"
+                        alt="preview"
+                        @error="(e) => e.target.style.opacity = '0.2'"
+                      />
+                      <span v-else class="img-preview-empty">🎁</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <button class="btn btn-danger btn-sm btn-icon" @click="eliminarPremio(i)" title="Eliminar">✕</button>
@@ -397,4 +417,22 @@ function onOverlayClick(e) {
 .premio-fields input:focus { border-color: var(--primary-light); }
 .btn-icon { padding: 6px 8px; flex-shrink: 0; margin-top: 2px; }
 .premios-footer { display: flex; justify-content: space-between; margin-top: 10px; gap: 8px; }
+
+.url-preview-row { display: flex; gap: 8px; align-items: center; }
+.url-preview-row input { flex: 1; min-width: 0; }
+
+.img-preview {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.img-preview img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
+.img-preview-empty { font-size: 20px; }
 </style>

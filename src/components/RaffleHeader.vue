@@ -11,6 +11,23 @@ const premios = computed(() => {
   try { return JSON.parse(props.config.premios || '[]') } catch { return [] }
 })
 
+// Convierte URLs de Google Drive al formato directo de imagen
+function resolverImagen(url) {
+  if (!url) return ''
+  // https://drive.google.com/file/d/FILE_ID/view...
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/)
+  if (m1) return `https://lh3.googleusercontent.com/d/${m1[1]}`
+  // https://drive.google.com/open?id=FILE_ID
+  const m2 = url.match(/[?&]id=([^&]+)/)
+  if (m2 && url.includes('drive.google.com')) return `https://lh3.googleusercontent.com/d/${m2[1]}`
+  return url
+}
+
+function onImgError(e) {
+  e.target.style.display = 'none'
+  e.target.nextElementSibling?.style.removeProperty('display')
+}
+
 const tiempoDesde = computed(() => {
   if (!props.ultimaActualizacion) return ''
   const diff = Math.floor((Date.now() - props.ultimaActualizacion) / 1000)
@@ -58,8 +75,14 @@ const tiempoDesde = computed(() => {
       <div v-if="premios.length" class="premios">
         <div v-for="(premio, i) in premios" :key="i" class="premio-card">
           <div class="premio-img-wrap">
-            <img v-if="premio.url" :src="premio.url" :alt="premio.nombre" class="premio-img" />
-            <span v-else class="premio-img-placeholder">🎁</span>
+            <img
+              v-if="premio.url"
+              :src="resolverImagen(premio.url)"
+              :alt="premio.nombre"
+              class="premio-img"
+              @error="onImgError"
+            />
+            <span class="premio-img-placeholder" :style="premio.url ? 'display:none' : ''">🎁</span>
           </div>
           <div class="premio-info">
             <span class="premio-nombre">{{ premio.nombre }}</span>
